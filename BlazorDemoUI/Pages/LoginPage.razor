@@ -5,6 +5,7 @@
 @using BlazorDemoUI.Models.Northwind
 @using Microsoft.EntityFrameworkCore
 
+@inject IAccountService AccountService
 
 <div class="col-xl-6">
     <h3>Simple login</h3>
@@ -64,11 +65,22 @@
     string userName = "admin";
     string password = "admin";
     EventConsole console;
+    private Models.Account.Login model = new Models.Account.Login();
 
-    void OnLogin(LoginArgs args, string name)
+    private async void OnLogin(LoginArgs args, string name)
     {
+        try
+        {
+            model.Username = "김광일";
+            model.Password = "비밀번호";
+            await AccountService.Login(model);
+            console.Log($"{name} -> Username: {args.Username} and password: {args.Password}");
+        }
+        catch (Exception ex)
+        {
+            console.Log($"{ex.Message}");
+        }
 
-        console.Log($"{name} -> Username: {args.Username} and password: {args.Password}");
     }
 
     void OnRegister(string name)

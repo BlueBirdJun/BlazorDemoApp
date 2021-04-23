@@ -12,6 +12,7 @@ using Radzen;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace BlazorDemoUI
@@ -37,10 +38,14 @@ namespace BlazorDemoUI
             });
 
             services.AddSingleton<WeatherForecastService>();
-            services.AddTransient<IHttpService, HttpService>();
+            
             services.AddTransient<ISqlDataAccess, SqlDataAccess>();
             services.AddTransient<IPeopleData, PeopleData>();
 
+            services.AddScoped<IHttpService, HttpService>();
+            services.AddScoped<IAccountService, AccountService>();
+            services.AddScoped<ILocalStorageService, LocalStorageService>();
+            
             services.AddScoped<ThemeState>();
             services.AddScoped<ExampleService>();
             services.AddScoped<NorthwindContext>();
@@ -51,6 +56,18 @@ namespace BlazorDemoUI
             services.AddScoped<ContextMenuService>();
             services.AddScoped<NorthwindService>();
             services.AddScoped<NorthwindODataService>();
+
+            services.AddScoped(x =>
+            {
+                var apiUrl = new Uri(Configuration.GetValue<string>("apiUrl"));                
+                // use fake backend if "fakeBackend" is "true" in appsettings.json
+                if (Configuration.GetValue<string>("fakeBackend") == "true")
+                {
+                    var fakeBackendHandler = new FakeBackendHandler(x.GetService<ILocalStorageService>());
+                    return new HttpClient(fakeBackendHandler) { BaseAddress = apiUrl };
+                }
+                return new HttpClient() { BaseAddress = apiUrl };
+            });
 
             services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
             {
